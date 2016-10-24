@@ -4,12 +4,12 @@ from lxml import etree
   
 class Article:
     def __init__(self, headline, pub_date, text, source, other, dateline):
-        self.headline = headline
-        self.pub_date = pub_date
-        self.text = text
-        self.source = source
-        self.other = other
-        self.dateline = dateline
+        self.headline = headline # string or None
+        self.pub_date = pub_date # datetime
+        self.text = text         # should never be None, always string
+        self.source = source     # Source enumeration
+        self.other = other       # dictionary with arbitrary keys and values
+        self.dateline = dateline # string or None
 
     def __str__(self):
         return ('Article:\n'
@@ -20,7 +20,8 @@ class Article:
                 'Other: {s.other}\n'
                 'Text:\n'
                 '{s.text}\n').format(s=self)
-  
+
+
 class AbstractDatasetExtractor:
     NAME = 'abstract extractor'
   
@@ -49,3 +50,4 @@ class AbstractDatasetExtractor:
         for path in self.get_file_paths():
             tree = self.get_parse_tree_for_path(path)
             yield from self.parse_tree_to_articles(tree)
+
