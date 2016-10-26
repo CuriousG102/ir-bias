@@ -37,10 +37,10 @@ class AquaintDatasetExtractor(AbstractDatasetExtractor):
                 if headline is not None:
                     headline = ' '.join(headline.xpath('.//text()')) 
                 text = ' '.join(body.find('TEXT').xpath('.//text()'))
-                date = "test"
-                other = "test"
-                source = "test"
-                dateline = "test"
+                date = datetime 		#TODO
+                other = "test"    		#TODO
+                source = "test"			#TODO
+                dateline = "test"		#TODO
                 """	
 		        date_string = doc_attrs['id'].split('_')[-1].split('.')[0]
                 date = datetime.datetime.strptime(date_string,
