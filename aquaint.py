@@ -1,19 +1,25 @@
 from lxml import etree
 
 import datetime
+import re
 
 from get_articles import AbstractDatasetExtractor, Article
 from sources import Source
 
 class AquaintDatasetExtractor(AbstractDatasetExtractor):
     SOURCE_DEFAULTS = {
-        'AFP': Source.AFP,
         'AP': Source.APW, 
         'APW': Source.APW,
-        'CNA': Source.CNA,
-        'LTW': Source.LATW,
+        'AZR': Source.ARZ_REPUB,
+        'BOS': Source.BOST,
+        'COX': Source.COX,
+        #'HNS': SOURCE.HRST,  Actually Hearst News Service - the same?
+        'KAN': Source.KAN_CITY_STAR,
+        'LADN': Source.LA_DAILY,
+        #'LBPT': SOURCE.LONG_BEACH, #TODO add to Source
         'NYT': Source.NYT,
-        'XIN': Source.XIN
+        'SFRCHRON': Source.SF_CHRON,
+        'XIE': Source.XIN
     }
 
     def __init__(self, path):
@@ -28,30 +34,34 @@ class AquaintDatasetExtractor(AbstractDatasetExtractor):
     def parse_tree_to_articles(self, tree):
         for doc in tree.getiterator(tag='DOC'):
             try:
-                datetime = doc.find('DATE_TIME')
-                if datetime is not None:
-                    datetime = ' '.join(datetime.xpath('.//text()')) 
+                docno = doc.find('DOCNO')
+                if docno is not None:
+                    doc_str = re.split(r'(\d+)', ''.join(docno.xpath('.//text()')))
+                    date = datetime.datetime.strptime(doc_str[1], '%Y%m%d')
+                    for abrv in self.SOURCE_DEFAULTS:
+                        if abrv in doc_str[0]:
+                            source = self.SOURCE_DEFAULTS[abrv]
+                """
+                date_str = doc.find('DATE_TIME')
+                if date_str is not None:
+                    date_str = ''.join(date_str.xpath('.//text()'))
+                    date_str = date_str.strip().split(' ')
+                date = datetime.datetime.strptime((date_str[0]),'%Y-%m-%d') 		#TODO
+                """
+                other = doc.find('DOCTYPE')
+                if other is not None:
+                    other = {'type': ''.join(other.xpath('.//text()'))}
                 body = doc.find('BODY')
-                doc_attrs = dict(doc.items())
+                slug = body.find('SLUG')
+                if slug is not None:
+                    for abrv in self.SOURCE_DEFAULTS:
+                        if abrv in (''.join(slug.xpath('.//text()'))):
+                            source = self.SOURCE_DEFAULTS[abrv]						
                 headline = body.find('HEADLINE')
                 if headline is not None:
                     headline = ' '.join(headline.xpath('.//text()')) 
+                dateline = doc.find('DATELINE')
                 text = ' '.join(body.find('TEXT').xpath('.//text()'))
-                date = datetime 		#TODO
-                other = "test"    		#TODO
-                source = "test"			#TODO
-                dateline = "test"		#TODO
-                """	
-		        date_string = doc_attrs['id'].split('_')[-1].split('.')[0]
-                date = datetime.datetime.strptime(date_string,
-                                                  '%Y%m%d')
-                other = {'type': doc_attrs['type']}
-                source = self.SOURCE_DEFAULTS[doc_attrs['id'].split('_')[0]]
-                if dateline:
-                    for slug in self.source_slug_mapping:
-                        if slug in dateline:
-                            source = self.source_slug_mapping[slug]
-                """
                 yield Article(headline, date, text, source, other, dateline) 
             except Exception:
                 raise Exception('Failed on: ' + etree.tostring(doc).decode())
