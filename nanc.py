@@ -74,23 +74,30 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
                         elif copyright == 'Post':
                            source = Source.WAPO
                     else:
-                        source = Source.LATW 
-                    headline = ' '.join(doc.find('HEADLINE').xpath('.//text()')).split('\n')[0]
+                        source = Source.LATW
+                    headline = doc.find('HEADLINE') 
+                    if headline is not None:
+                        headline = ' '.join(headline.xpath('.//text()')).split('\n')[0]
                 elif docid is not None and 'reu' in docid.lower():
-                    headline = ' '.join(doc.find('HEADLINE').xpath('.//text()'))
+                    headline = doc.find('HEADLINE')
+                    if headline is not None:
+                        headline = ' '.join(headline.xpath('.//text()'))
                     source = sources.REUTE
                     header = ' '.join(doc.find('HEADER').xpath('.//text()')).strip()
                     date = re.findall(r'\d+', docid)[0][:2] + '-' + re.strip(' ', header)[1]
                     date = datetime.datetime.striptime(date, '%y%m%d')
                 elif docSource is not None and 'WJ' in docSource:
                     source = sources.WSJ
-                    headline = ' '.join(doc.find('HL').xpath('.//text()'))
+                    headline = doc.find('HEADLINE')
+                    if headline is not None:
+                        headline = ' '.join(headline.xpath('.//text()'))
                     date = ' '.join(doc.find('DSPDATE').xpath('.//text()')).strip()
                     date = datetime.datetime.strptime(doc.find(date, '%y%m%d'))
-                dateline = ' '.join(doc.find('DATELINE').xpath('.//text()'))
-                other = {'type': doc_attrs['type']}
+                dateline = doc.find('DATELINE')
+                if dateline is not None:
+                    dateline = ' '.join(dateline.xpath('.//text()'))
                 text = doc.find('TEXT')
-                #doc_attrs = dict(doc.items())
+				other = None
                 yield Article(headline, date, text, source, other, dateline) 
             except Exception:
                 raise Exception('Failed on: ' + etree.tostring(doc).decode())
