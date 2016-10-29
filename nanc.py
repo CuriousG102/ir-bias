@@ -1,4 +1,6 @@
 import datetime
+import re
+
 from get_articles import AbstractDatasetExtractor, Article
 from sources import Source
 
