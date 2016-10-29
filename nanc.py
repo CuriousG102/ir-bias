@@ -1,8 +1,4 @@
-from lxml import etree
-
 import datetime
-import re
-
 from get_articles import AbstractDatasetExtractor, Article
 from sources import Source
 
@@ -52,7 +48,7 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
                 if docSource is not None:
                     docSource = ' '.join(docSource.xpath('.//text()'))
                 if docid is not None and 'nyt' in docid.lower():
-                    date = datetime.datetime.strptime(re.findAll(r'\d+', docid)[0], '%Y%m%d')
+                    date = datetime.datetime.strptime(re.findall(r'\d+', docid)[0], '%Y%m%d')
                     preamble = doc.find('PREAMBLE')
                     if preamble is not None:
                         preamble = ' '.join(preamble.xpath('.//text()'))
@@ -60,7 +56,7 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
                         source = self.SOURCE_DEFAULTS[re.split(r'-', lines[0])[-1].split(' ')[0]]
                         headline = None
                 elif docid is not None and 'latwp' in docid.lower():
-                    date = datetime.datetime.strptime(re.findAll(r'\d+', docid)[0], '%Y%m%d')
+                    date = datetime.datetime.strptime(re.findall(r'\d+', docid)[0], '%Y%m%d')
                     copyright = ' '.join(doc.find('CPYRIGHT').xpath('.//text()')).split(' ')[-1]
                     if copyright == 'Newsday':
                         source = sources.NEWSDAY
