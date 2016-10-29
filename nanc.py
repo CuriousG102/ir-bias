@@ -32,6 +32,8 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
         'WSJ': Source.WSJ
     }
 
+    ENCODING = 'ISO-8859-1'
+
     def __init__(self, path):
         super().__init__(path)
         self.source_slug_mapping = dict()
@@ -44,21 +46,24 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
         for doc in tree.getiterator(tag='DOC'):
             try:
                 docid = doc.find('DOCID')
+                if docid is not None
+                    docid = ' '.join(docid.xpath('.//text()')) 
                 docSource = doc.find('SOURCE')
+				    docSource = ' '.join(docSource.xpath('.//text()'))
                 if docid is not None and 'nyt' in docid.lower():
                     date = datetime.datetime.strptime(re.findAll(r'\d+', docid)[0], '%Y%m%d')
                     preamble = doc.find('PREAMBLE')
                     if preamble is not None:
-				        lines = re.split(r'\n', preamble)
+                        preamble = ' '.join(preamble.xpath('.//text()')
+                        lines = re.split(r'\n', preamble)
                         source = self.SOURCE_DEFAULTS[re.split(r'-', lines[0])[-1].split(' ')[0]]
-                        headline = ''
-                        date = None
+                        headline = None
                 elif docid is not None and 'latwp' in docid.lower():
                     date = datetime.datetime.strptime(re.findAll(r'\d+', docid)[0], '%Y%m%d')
-                    copyright = doc.find('CPYRIGHT').split(' ')[-1]
+                    copyright = ' '.join(doc.find('CPYRIGHT').xpath('.//text()').split(' ')[-1]
                     if copyright == 'Newsday':
                         source = sources.NEWSDAY
-                    elif copyright == 'Courant'
+                    elif copyright == 'Courant':
                         source = sources.HARTC
                     elif copyright == 'Sun':
                         source = sources.BSUN
@@ -66,20 +71,20 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
                         source = sources.LAT
                     elif copyright == 'Post':
                         source = sources.WAPO
-					headline = doc.find('HEADLINE').split('\n')[0];
+					headline = ' '.join(doc.find('HEADLINE').xpath('.//text()').split('\n')[0]
                 elif docid is not None and 'reu' in docid.lower():
-				    headline = doc.find('HEADLINE')
-					source = sources.REUTE
-					date = re.findall(r'\d+', docid)[0][:2] + '-' + re.strip(' ', doc.find('HEADER').strip())[1]
+					headline = ' '.join(doc.find('HEADLINE').xpath('.//text()'))
+                    source = sources.REUTE
+                    date = re.findall(r'\d+', docid)[0][:2] + '-' + re.strip(' ', doc.find('HEADER').strip())[1]
                     date = datetime.datetime.striptime(date, '%Y%m%d')
                 elif docSource is not None and 'WJ' in docSource:
                     source = sources.WSJ
-                    headline = doc.find('HL')
+					headline = ' '.join(doc.find('HL').xpath('.//text()')
                     date = datetime.datetime.strptime(doc.find('DSPDATE').strip(), '%Y%m%d')
-				dateline = doc.find('DATELINE')
+                dateline = ' '.join(doc.find('DATELINE').xpath('.//text()'))
                 other = {'type': doc_attrs['type']}
                 text = doc.find('TEXT')
                 #doc_attrs = dict(doc.items())
-				yield Article(headline, date, text, source, other, dateline) 
+                yield Article(headline, date, text, source, other, dateline) 
             except Exception:
                 raise Exception('Failed on: ' + etree.tostring(doc).decode())

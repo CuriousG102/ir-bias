@@ -24,6 +24,8 @@ class Article:
 
 class AbstractDatasetExtractor:
     NAME = 'abstract extractor'
+    IGNORED_EXTENSIONS = ['1st', 'swp', 'tar', 'txt', 'DS_Store', 'rst']
+    ENCODING = None
   
     def __init__(self, path):
         self.path = path
@@ -32,14 +34,21 @@ class AbstractDatasetExtractor:
         paths = []
         for root, dirs, files in os.walk(self.path):
             for file_ in files:
+                f_split = file_.split('.')
+                if len(f_split) > 1 and f_split[-1] in self.IGNORED_EXTENSIONS:
+                    continue
                 paths.append(os.path.join(root, file_))
         return paths
   
     def get_parse_tree_for_path(self, path):
         try:
             parser = etree.XMLParser(recover=True)
-            with open(path, 'r') as f:
-                return etree.fromstring('<root>'+f.read()+'</root>', parser)
+            if self.ENCODING:
+                with open(path, 'r', encoding=self.ENCODING) as f:
+                    return etree.fromstring('<root>'+f.read()+'</root>', parser)
+            else:
+                with open(path, 'r') as f:
+                    return etree.fromstring('<root>'+f.read()+'</root>', parser) 
         except Exception:
             raise Exception('Failed on: ' + path)
   
