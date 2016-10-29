@@ -57,7 +57,9 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
                         preamble = ' '.join(preamble.xpath('.//text()'))
                         lines = re.split(r'\n', preamble)
                         source = self.SOURCE_DEFAULTS[re.split(r'-', lines[0])[-1].split(' ')[0]]
-                        headline = None
+                    else:
+                        source = Source.NYT
+                    headline = None
                 elif docid is not None and 'latwp' in docid.lower():
                     date = datetime.datetime.strptime(re.findall(r'\d+', docid)[0], '%y%m%d')
                     copyright = doc.find('CPYRIGHT')
@@ -83,9 +85,13 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
                     if headline is not None:
                         headline = ' '.join(headline.xpath('.//text()'))
                     source = Source.REUTE
-                    header = ' '.join(doc.find('HEADER').xpath('.//text()')).strip()
-                    date = re.findall(r'\d+', docid)[0][:2] + '-' + re.strip(' ', header)[1]
-                    date = datetime.datetime.striptime(date, '%y%m%d')
+                    header = doc.find('HEADER')
+                    if header is not None:
+                        header = ' '.join(header.xpath('.//text()')).strip()
+                        date = re.findall(r'\d+', docid)[0][:2] + '-' + re.strip(' ', header)[1]
+                        date = datetime.datetime.striptime(date, '%y%m%d')
+                    else:
+                        date = None
                 elif docSource is not None and 'WJ' in docSource:
                     source = Source.WSJ
                     headline = doc.find('HEADLINE')
