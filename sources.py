@@ -5,13 +5,14 @@ class Source(Enum):
     ALB_TIMES_U = ([], 'Albany Times Union')
     ARZ_REPUB = (['ARIZONA-REPUBLIC', 'AZR'], 'Arizona Republic')
     ATL_CONST = ([], 'Atlanta Constitution')
-    BLMBRG = ([], 'Bloomberg Business News')
-    BOST = (['BOS'], 'Boston Globe')
+    BLMBRG = (['BLOOM'], 'Bloomberg Business News')
+    BOST = (['BO', 'BOS'], 'Boston Globe')
     CASPER = ([], 'Casper (Wyo.) Star-Tribune')
     CHI_SUN = ([], 'Chicago Sun-Times')
     COLUMBIA_NEWS = ([], 'Columbia News Service')
     COX = (['COX'], 'Cox News Service')
-    FW_STAR_TELEGRAM = ([], 'Fort Worth Star-Telegram')
+	ECO = (['EC', 'ECO', 'ECONOMI', 'ECONOMIST'], 'Economist')
+    FW_STAR_TELEGRAM = (['TE', 'TEX'], 'Fort Worth Star-Telegram')
     HRST = ([], 'Hearst Newspapers') # no unique tag
     CHRON = ([], 'Houston Chronicle') # no unique tag
     INTL_HERALD_TRIB = ([], 'International Herald Tribune')
@@ -23,13 +24,15 @@ class Source(Enum):
     ST_NEWS_SERVICE = ([], 'State News Service')
     APW = ([], 'Associated Press Worldstream')
     CNA = ([], 'Central News Agency of Taiwan')
-    LAT = ([], 'Los Angeles Times')
+    LAT = (['LAT'], 'Los Angeles Times')
     LATW = ([], 'LA Times/WaPo Newswire')
     LBPT = ([], 'Long Beach Press-Telegram')
     WAPO = ([], 'Washington Post')
+	WSJ = ([], 'Wall-Street Journal')
     NYT = (['NYT'], 'New York Times')
     SLATE = ([], 'Slate')
     XIN = ([], 'Xinua News Agency')
+	REUTE = (['REUFF', 'REUTE'], 'Reuters')
 
     def __init__(self, datelines, name):
         self.datelines = datelines
