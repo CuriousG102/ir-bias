@@ -1,6 +1,7 @@
 import datetime
 import re
 
+from lxml import etree    
 from get_articles import AbstractDatasetExtractor, Article
 from sources import Source
 
@@ -60,16 +61,19 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
                 elif docid is not None and 'latwp' in docid.lower():
                     date = datetime.datetime.strptime(re.findall(r'\d+', docid)[0], '%y%m%d')
                     copyright = ' '.join(doc.find('CPYRIGHT').xpath('.//text()')).split(' ')[-1]
-                    if copyright == 'Newsday':
-                        source = sources.NEWSDAY
-                    elif copyright == 'Courant':
-                        source = sources.HARTC
-                    elif copyright == 'Sun':
-                        source = sources.BSUN
-                    elif copyright == 'Times':
-                        source = sources.LAT
-                    elif copyright == 'Post':
-                        source = sources.WAPO
+                    if copyright is not None:
+                        if copyright == 'Newsday':
+                            source = sources.NEWSDAY
+                        elif copyright == 'Courant':
+                            source = sources.HARTC
+                        elif copyright == 'Sun':
+                            source = sources.BSUN
+                        elif copyright == 'Times':
+                           source = sources.LAT
+                        elif copyright == 'Post':
+                           source = sources.WAPO
+                    else:
+					    source = sources.LATWP 
                     headline = ' '.join(doc.find('HEADLINE').xpath('.//text()')).split('\n')[0]
                 elif docid is not None and 'reu' in docid.lower():
                     headline = ' '.join(doc.find('HEADLINE').xpath('.//text()'))
