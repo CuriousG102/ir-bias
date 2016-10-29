@@ -82,12 +82,12 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
                     headline = doc.find('HEADLINE')
                     if headline is not None:
                         headline = ' '.join(headline.xpath('.//text()'))
-                    source = sources.REUTE
+                    source = Source.REUTE
                     header = ' '.join(doc.find('HEADER').xpath('.//text()')).strip()
                     date = re.findall(r'\d+', docid)[0][:2] + '-' + re.strip(' ', header)[1]
                     date = datetime.datetime.striptime(date, '%y%m%d')
                 elif docSource is not None and 'WJ' in docSource:
-                    source = sources.WSJ
+                    source = Source.WSJ
                     headline = doc.find('HEADLINE')
                     if headline is not None:
                         headline = ' '.join(headline.xpath('.//text()'))
