@@ -50,7 +50,7 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
                 if docSource is not None:
                     docSource = ' '.join(docSource.xpath('.//text()'))
                 if docid is not None and 'nyt' in docid.lower():
-                    date = datetime.datetime.strptime(re.findall(r'\d+', docid)[0], '%Y%m%d')
+                    date = datetime.datetime.strptime(re.findall(r'\d+', docid)[0], '%y%m%d')
                     preamble = doc.find('PREAMBLE')
                     if preamble is not None:
                         preamble = ' '.join(preamble.xpath('.//text()'))
@@ -58,7 +58,7 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
                         source = self.SOURCE_DEFAULTS[re.split(r'-', lines[0])[-1].split(' ')[0]]
                         headline = None
                 elif docid is not None and 'latwp' in docid.lower():
-                    date = datetime.datetime.strptime(re.findall(r'\d+', docid)[0], '%Y%m%d')
+                    date = datetime.datetime.strptime(re.findall(r'\d+', docid)[0], '%y%m%d')
                     copyright = ' '.join(doc.find('CPYRIGHT').xpath('.//text()')).split(' ')[-1]
                     if copyright == 'Newsday':
                         source = sources.NEWSDAY
@@ -76,12 +76,12 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
                     source = sources.REUTE
                     header = ' '.join(doc.find('HEADER').xpath('.//text()')).strip()
                     date = re.findall(r'\d+', docid)[0][:2] + '-' + re.strip(' ', header)[1]
-                    date = datetime.datetime.striptime(date, '%Y%m%d')
+                    date = datetime.datetime.striptime(date, '%y%m%d')
                 elif docSource is not None and 'WJ' in docSource:
                     source = sources.WSJ
                     headline = ' '.join(doc.find('HL').xpath('.//text()'))
                     date = ' '.join(doc.find('DSPDATE').xpath('.//text()')).strip()
-                    date = datetime.datetime.strptime(doc.find(date, '%Y%m%d'))
+                    date = datetime.datetime.strptime(doc.find(date, '%y%m%d'))
                 dateline = ' '.join(doc.find('DATELINE').xpath('.//text()'))
                 other = {'type': doc_attrs['type']}
                 text = doc.find('TEXT')
