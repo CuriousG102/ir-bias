@@ -60,20 +60,21 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
                         headline = None
                 elif docid is not None and 'latwp' in docid.lower():
                     date = datetime.datetime.strptime(re.findall(r'\d+', docid)[0], '%y%m%d')
-                    copyright = ' '.join(doc.find('CPYRIGHT').xpath('.//text()')).split(' ')[-1]
+                    copyright = doc.find('CPYRIGHT')
                     if copyright is not None:
+                        copyright = ' '.join(copyright.xpath('.//text()')).split(' ')[-1]
                         if copyright == 'Newsday':
-                            source = sources.NEWSDAY
+                            source = Source.NEWSDAY
                         elif copyright == 'Courant':
-                            source = sources.HARTC
+                            source = Source.HARTC
                         elif copyright == 'Sun':
-                            source = sources.BSUN
+                            source = Source.BSUN
                         elif copyright == 'Times':
-                           source = sources.LAT
+                           source = Source.LAT
                         elif copyright == 'Post':
-                           source = sources.WAPO
+                           source = Source.WAPO
                     else:
-					    source = sources.LATWP 
+                        source = Source.LATW 
                     headline = ' '.join(doc.find('HEADLINE').xpath('.//text()')).split('\n')[0]
                 elif docid is not None and 'reu' in docid.lower():
                     headline = ' '.join(doc.find('HEADLINE').xpath('.//text()'))
