@@ -41,9 +41,11 @@ class GigawordDatasetExtractor(AbstractDatasetExtractor):
                                                   '%Y%m%d')
                 other = {'type': doc_attrs['type']}
                 source = self.SOURCE_DEFAULTS[doc_attrs['id'].split('_')[0]]
-                if dateline:
+                if dateline and source == Source.NYT:
+                    slug_line = dateline[dateline.rfind('(')+1:dateline.rfind(')')]
+                    slug_line = slug_line.split('-')[-1]
                     for slug in self.source_slug_mapping:
-                        if slug in dateline:
+                        if slug.upper() == slug_line.upper().strip():
                             source = self.source_slug_mapping[slug]
                 yield Article(headline, date, text, source, other, dateline) 
             except Exception:
