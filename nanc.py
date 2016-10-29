@@ -97,7 +97,7 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
                 if dateline is not None:
                     dateline = ' '.join(dateline.xpath('.//text()'))
                 text = doc.find('TEXT')
-				other = None
+                other = None
                 yield Article(headline, date, text, source, other, dateline) 
             except Exception:
                 raise Exception('Failed on: ' + etree.tostring(doc).decode())
