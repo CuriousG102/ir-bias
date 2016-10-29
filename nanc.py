@@ -1,6 +1,7 @@
 from lxml import etree
 
 import datetime
+import re
 
 from get_articles import AbstractDatasetExtractor, Article
 from sources import Source
@@ -24,7 +25,7 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
         'REUFF': Source.REUTE,
         'REUTE': Source.REUTE,
         'SFCHRON': Source.SF_CHRON,
-        'SPI': Source.SEATTKE_POST_INTEL,
+        'SPI': Source.SEATTLE_POST_INTEL,
         'TE': Source.FW_STAR_TELEGRAM,
         'TEX': Source.FW_STAR_TELEGRAM,
         'WP': Source.WAPO,
@@ -38,28 +39,47 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
             for dateline in source.datelines:
                 assert(dateline not in self.source_slug_mapping)
                 self.source_slug_mapping[dateline] = source
-            
 
     def parse_tree_to_articles(self, tree):
         for doc in tree.getiterator(tag='DOC'):
             try:
-                doc_attrs = dict(doc.items())
-                headline = doc.find('HEADLINE')
-                if headline is not None:
-                    headline = ' '.join(headline.xpath('.//text()')) 
-                dateline = doc.find('DATELINE')
-                if dateline is not None:
-                    dateline = ' '.join(dateline.xpath('.//text()')) 
-                text = ' '.join(doc.find('TEXT').xpath('.//text()'))
-                date_string = doc_attrs['id'].split('_')[-1].split('.')[0]
-                date = datetime.datetime.strptime(date_string,
-                                                  '%Y%m%d')
+                docid = doc.find('DOCID')
+                docSource = doc.find('SOURCE')
+                if docid is not None and 'nyt' in docid.lower():
+                    date = datetime.datetime.strptime(re.findAll(r'\d+', docid)[0], '%Y%m%d')
+                    preamble = doc.find('PREAMBLE')
+                    if preamble is not None:
+				        lines = re.split(r'\n', preamble)
+                        source = self.SOURCE_DEFAULTS[re.split(r'-', lines[0])[-1].split(' ')[0]]
+                        headline = ''
+                        date = None
+                elif docid is not None and 'latwp' in docid.lower():
+                    date = datetime.datetime.strptime(re.findAll(r'\d+', docid)[0], '%Y%m%d')
+                    copyright = doc.find('CPYRIGHT').split(' ')[-1]
+                    if copyright == 'Newsday':
+                        source = sources.NEWSDAY
+                    elif copyright == 'Courant'
+                        source = sources.HARTC
+                    elif copyright == 'Sun':
+                        source = sources.BSUN
+                    elif copyright == 'Times':
+                        source = sources.LAT
+                    elif copyright == 'Post':
+                        source = sources.WAPO
+					headline = doc.find('HEADLINE').split('\n')[0];
+                elif docid is not None and 'reu' in docid.lower():
+				    headline = doc.find('HEADLINE')
+					source = sources.REUTE
+					date = re.findall(r'\d+', docid)[0][:2] + '-' + re.strip(' ', doc.find('HEADER').strip())[1]
+                    date = datetime.datetime.striptime(date, '%Y%m%d')
+                elif docSource is not None and 'WJ' in docSource:
+                    source = sources.WSJ
+                    headline = doc.find('HL')
+                    date = datetime.datetime.strptime(doc.find('DSPDATE').strip(), '%Y%m%d')
+				dateline = doc.find('DATELINE')
                 other = {'type': doc_attrs['type']}
-                source = self.SOURCE_DEFAULTS[doc_attrs['id'].split('_')[0]]
-                if dateline:
-                    for slug in self.source_slug_mapping:
-                        if slug in dateline:
-                            source = self.source_slug_mapping[slug]
-                yield Article(headline, date, text, source, other, dateline) 
+                text = doc.find('TEXT')
+                #doc_attrs = dict(doc.items())
+				yield Article(headline, date, text, source, other, dateline) 
             except Exception:
                 raise Exception('Failed on: ' + etree.tostring(doc).decode())
