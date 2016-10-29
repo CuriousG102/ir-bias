@@ -25,8 +25,10 @@ class Source(Enum):
     CNA = ([], 'Central News Agency of Taiwan')
     LAT = ([], 'Los Angeles Times')
     LATW = ([], 'LA Times/WaPo Newswire')
+    LBPT = ([], 'Long Beach Press-Telegram')
     WAPO = ([], 'Washington Post')
     NYT = (['NYT'], 'New York Times')
+    SLATE = ([], 'Slate')
     XIN = ([], 'Xinua News Agency')
 
     def __init__(self, datelines, name):

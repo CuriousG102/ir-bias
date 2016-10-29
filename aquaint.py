@@ -13,12 +13,15 @@ class AquaintDatasetExtractor(AbstractDatasetExtractor):
         'AZR': Source.ARZ_REPUB,
         'BOS': Source.BOST,
         'COX': Source.COX,
-        #'HNS': SOURCE.HRST,  Actually Hearst News Service - the same?
+        'HNS': Source.HRST,  
         'KAN': Source.KAN_CITY_STAR,
         'LADN': Source.LA_DAILY,
-        #'LBPT': SOURCE.LONG_BEACH, #TODO add to Source
+        'LBPT': Source.LBPT, 
         'NYT': Source.NYT,
-        'SFRCHRON': Source.SF_CHRON,
+        'SLATE': Source.SLATE, 
+        'SFCHRON': Source.SF_CHRON,
+        'SPI': Source.SEATTLE_POST_INTEL,		
+        'TEX': Source.FW_STAR_TELEGRAM,
         'XIE': Source.XIN
     }
 
@@ -46,16 +49,16 @@ class AquaintDatasetExtractor(AbstractDatasetExtractor):
                 if date_str is not None:
                     date_str = ''.join(date_str.xpath('.//text()'))
                     date_str = date_str.strip().split(' ')
-                date = datetime.datetime.strptime((date_str[0]),'%Y-%m-%d') 		#TODO
+                date = datetime.datetime.strptime((date_str[0]),'%Y-%m-%d') 		
                 """
                 other = doc.find('DOCTYPE')
                 if other is not None:
-                    other = {'type': ''.join(other.xpath('.//text()'))}
+                    other = {'type': ''.join(other.xpath('.//text()')).strip()}
                 body = doc.find('BODY')
                 slug = body.find('SLUG')
-                if slug is not None:
+                if (slug is not None) and (source == self.SOURCE_DEFAULTS['NYT']):
                     for abrv in self.SOURCE_DEFAULTS:
-                        if abrv in (''.join(slug.xpath('.//text()'))):
+                        if abrv in (''.join(slug.xpath('.//text()')).split('-')[-1]):
                             source = self.SOURCE_DEFAULTS[abrv]						
                 headline = body.find('HEADLINE')
                 if headline is not None:
