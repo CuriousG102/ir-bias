@@ -46,7 +46,7 @@ def make_vec_models(save_path, temp_path, *extractors):
         model = gensim.models.Word2Vec(sentences,
                                        iter=NUM_PASSES, 
                                        workers=multiprocessing.cpu_count())
-        model_path = get_source_file_path(save_path, source.name)
+        model_path = get_source_file_path(save_path, source)
         model.save(model_path)
 
 if __name__ == '__main__':
