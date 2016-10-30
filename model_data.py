@@ -125,9 +125,5 @@ def judge_model_qualities(save_path, questions_path):
     return all_accur_data
     
 if __name__ == '__main__':
-    # make_vec_models('/home/paper/extractors/models', 
-    #                 '/newsdata/extracted_text',
-    #                 GigawordDatasetExtractor('/newsdata/gigaword'),
-    #                 AquaintDatasetExtractor('/home/paper/aquaint_real/'))
     judge_model_qualities('/home/paper/extractors/models',
                           '/home/paper/extractors/questions-words.txt')
