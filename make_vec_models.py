@@ -47,7 +47,7 @@ def make_vec_models(save_path, temp_path, *extractors):
                                        iter=NUM_PASSES, 
                                        workers=multiprocessing.cpu_count())
         model_path = get_source_file_path(save_path, source.name)
-        model.save(os.path.join(save_path, model_path))
+        model.save(model_path)
 
 if __name__ == '__main__':
     make_vec_models('/home/paper/extractors/models', 
