@@ -33,8 +33,11 @@ class DataManager:
         '''
         self.clear_files(self.save_path)
 
+	def get_source_file_name(self, source):
+		return re.sub(r'[^a-zA-Z]', '_', source.source_name) + '.txt'
+
     def get_file_path(self, path, source):
-        file_name = re.sub(r'[^a-zA-Z]', '_', source.source_name) + '.txt'
+        file_name = self.get_source_file_name(source)
         return os.path.join(path,  file_name)
 
     def get_text_file_path(self, source):
@@ -42,6 +45,22 @@ class DataManager:
 
     def get_model_file_path(self, source):
         return self.get_file_path(self.save_path, source)
+
+	def get_available_source_models(self):
+		'''
+		Return list of sources that have 
+		word2vec models
+		'''
+		name_source_mapping = {}
+		for source in Source:
+			file_name = self.get_source_file_name(source)
+			name_source_mapping[file_name] = source
+		return [name_source_mapping[name] 
+				for name in os.listdir(self.save_path)
+				if name in name_source_mapping]
+	
+	def get_model_for_source(self, source):
+		return gensim.models.Word2Vec.load(self.get_model_file_path(source))
 
     def generate_extractions(self, *extractors):
         '''
