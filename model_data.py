@@ -1,9 +1,11 @@
-from aquaint import AquaintDatasetExtractor
-import gensim
-from gigaword import GigawordDatasetExtractor
 import multiprocessing
 import os
 import re
+
+import gensim
+
+from aquaint import AquaintDatasetExtractor
+from gigaword import GigawordDatasetExtractor
 from something import BigIterable
 from sources import Source
 
@@ -33,12 +35,17 @@ class DataManager:
         '''
         self.clear_files(self.save_path)
 
+    def clear_model_for_source(self, source):
+        model_path = self.get_model_file_path(source)
+        if os.path.isfile(model_path):
+            os.unlink(model_path)
+
     def get_source_file_name(self, source):
         return re.sub(r'[^a-zA-Z]', '_', source.source_name) + '.txt'
 
     def get_file_path(self, path, source):
         file_name = self.get_source_file_name(source)
-        return os.path.join(path,  file_name)
+        return os.path.join(path, file_name)
 
     def get_text_file_path(self, source):
         return self.get_file_path(self.temp_path, source)
@@ -46,18 +53,28 @@ class DataManager:
     def get_model_file_path(self, source):
         return self.get_file_path(self.save_path, source)
 
-    def get_available_source_models(self):
-        '''
-        Return list of sources that have 
-        word2vec models
-        '''
+    def get_available_source(self, path):
         name_source_mapping = {}
         for source in Source:
             file_name = self.get_source_file_name(source)
             name_source_mapping[file_name] = source
         return [name_source_mapping[name] 
-                for name in os.listdir(self.save_path)
+                for name in os.listdir(path)
                 if name in name_source_mapping]
+
+    def get_available_source_models(self):
+        '''
+        Return list of sources that have 
+        word2vec models
+        '''
+        return self.get_available_source(self.save_path)
+
+    def get_available_source_texts(self):
+        '''
+        Return list of sources that have
+        texts generated for training
+        '''
+        return self.get_available_source(self.temp_path)
     
     def get_model_for_source(self, source):
         return gensim.models.Word2Vec.load(self.get_model_file_path(source))
@@ -98,6 +115,16 @@ class DataManager:
         return source_file_map.keys()
 
     def generate_model_files(self, sources, gensim_args=None):
+        for source in sources:
+            print('Training on %s' % source)
+            model = self.generate_model(source, gensim_args) 
+            self.save_model(source, model)    
+
+    def save_model(self, source, model):
+        model_path = self.get_model_file_path(source)
+        model.save(model_path)
+
+    def generate_model(self, source, gensim_args=None):
         default_kwargs = {
             'iter': 5,
             'workers': multiprocessing.cpu_count()
@@ -105,16 +132,12 @@ class DataManager:
 
         if gensim_args:
             assert(type(gensime_args) == dict)
-            default_kwargs.update(gensim_args)
+            default_kwargs.update(gensim_args)  
 
-        for source in sources:
-            print('Training on %s' % source)
-            f_path = self.get_text_file_path(source)
-            sentences = gensim.models.word2vec.LineSentence(f_path)
-            model = gensim.models.Word2Vec(sentences,
-                                           **default_kwargs)
-            model_path = self.get_model_file_path(source)
-            model.save(model_path)
+        f_path = self.get_text_file_path(source)
+        sentences = gensim.models.word2vec.LineSentence(f_path)
+        model = gensim.models.Word2Vec(sentences,
+                                       **default_kwargs)
 
     def clear_all_and_make_models(self, *extractors, gensim_args=None):
         '''
@@ -124,5 +147,5 @@ class DataManager:
         self.clear_temp_files()
         self.clear_model_files()
         sources = self.generate_extractions(*extractors)
-        self.generate_model_files(sources)
+        self.generate_model_files(sources, gensim_args)
 
