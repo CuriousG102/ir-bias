@@ -7,29 +7,13 @@ def judge_model_quality(model):
     '''
     Judge model quality
     '''
-    print('Judging Quality: %s' % source)
     accur = model.accuracy(settings['questions_path'])
     tot_accur = accur[-1]
     assert(tot_accur['section'] == 'total')
     correct = len(tot_accur['correct'])
     incorrect = len(tot_accur['incorrect'])
     accur_percentage = correct / (correct + incorrect)
-    print('Total Accuracy: %f' % accur_percentage)
     return accur, accur_percentage
-
-def judge_source_quality(source):
-    '''
-    Load source model from disk and judge quality
-    '''
-    data_manager = DataManager(settings['temp_path'], settings['save_path'])
-    model = data_manager.get_model_for_source(source)
-    return judge_model_quality(model) 
-
-def judge_model_qualities():
-    all_accur_data = dict()
-    for source in data_manager.get_available_source_models():
-        all_accur_data[source] = judge_model_quality(source)
-    return all_accur_data
 
 def search_hyper_parameters(gensim_args):
     '''
@@ -41,17 +25,25 @@ def search_hyper_parameters(gensim_args):
     rating as judged by the method in judge_model_quality
     '''
     gensim_args = {k: list(v) for k, v in gensim_args.items()}
-    data_manager = DataManager(settings['temp_path'], settings['save_path'])
+    data_manager = DataManager(settings['temp_path'],
+                               settings['experiment_save_path'])
     data_manager.clear_model_files()
     best_parameters = dict()
+
+    possible_options = []
+    for kwarg, values in gensim_args.items():
+        arg_options = [(kwarg, value) for value in values] 
+        possible_options.append(arg_options)
+
+    num_combos = 1
+    for option_set in possible_options:
+        num_combos *= len(option_set)
+    print('Number option combinations: %i' % num_combos)
+
     for source in data_manager.get_available_source_texts():
         print('Searching Hyperparameter Space: %s' % source) 
         best_accuracy = -1
-        possible_options = []
-        for kw_arg, values in gensim_args.items():
-            arg_options = [(kwarg, value) for value in values] 
-            possible_options.append(arg_options)
-        
+
         for option_choices in itertools.product(*possible_options):
             option_choices = dict(option_choices)
             print('Training for options: %s' % option_choices)
@@ -69,5 +61,10 @@ def search_hyper_parameters(gensim_args):
     return best_parameters
 
 if __name__ == '__main__':
-    pass
+    search_hyper_parameters({
+        'size': [100, 200, 300],
+        'window': [3, 5, 7],
+        'sample': [1e-3, 1e-5],
+        'hs': [0, 1],
+    }) 
 

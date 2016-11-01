@@ -1,6 +1,6 @@
 from aquaint import AquaintDatasetExtractor
 from gigaword import GigawordDatasetExtractor
-from nanc import NANCDatasetExtractor
+from nanc_soup import NANCDatasetExtractor
 
 def test_extractors(*extractors_and_paths):
     for extractor, path in extractors_and_paths:
@@ -14,4 +14,4 @@ def test_extractors(*extractors_and_paths):
 if __name__ == '__main__':
     #test_extractors((AquaintDatasetExtractor,'/home/paper/aquaint_real'))
     #test_extractors((GigawordDatasetExtractor,'/newsdata/gigaword/'))
-    test_extractors((NANCDatasetExtractor,'/home/paper/nanc/'))
+    test_extractors((NANCDatasetExtractor,'/home/paper/extractors/nanc-subset'))

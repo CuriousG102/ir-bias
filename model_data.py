@@ -131,13 +131,14 @@ class DataManager:
         }
 
         if gensim_args:
-            assert(type(gensime_args) == dict)
+            assert(type(gensim_args) == dict)
             default_kwargs.update(gensim_args)  
 
         f_path = self.get_text_file_path(source)
         sentences = gensim.models.word2vec.LineSentence(f_path)
         model = gensim.models.Word2Vec(sentences,
                                        **default_kwargs)
+        return model
 
     def clear_all_and_make_models(self, *extractors, gensim_args=None):
         '''
