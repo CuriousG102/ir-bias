@@ -50,7 +50,7 @@ def search_hyper_parameters(gensim_args):
             model = data_manager.generate_model(source, 
                                                 gensim_args=option_choices)
             _, accuracy = judge_model_quality(model)
-            print('Training Accuracy: %f')
+            print('Training Accuracy: %f' % accuracy)
             if accuracy > best_accuracy:
                 best_accuracy = accuracy
                 data_manager.clear_model_for_source(source)
