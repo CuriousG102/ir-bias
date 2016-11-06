@@ -53,6 +53,16 @@ class DataManager:
     def get_model_file_path(self, source):
         return self.get_file_path(self.save_path, source)
 
+    def get_source_model_accuracy(self, source):
+        model = self.get_model_for_source(source)
+        accur = model.accuracy(settings['questions_path'])
+        tot_accur = accur[-1]
+        assert(tot_accur['section'] == 'total')
+        correct = len(tot_accur['correct'])
+        incorrect = len(tot_accur['incorrect'])
+        accur_percentage = correct / (correct + incorrect)
+        return accur, accur_percentage
+
     def get_available_source(self, path):
         name_source_mapping = {}
         for source in Source:

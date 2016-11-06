@@ -62,6 +62,9 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
         i = 0
         for doc in tree.find_all('doc'):
             try:
+                soup = BeautifulSoup(str(doc))
+                #print(str(soup))
+                #print(soup.find('text'))
                 docid = doc.docid
                 if docid:
                     docid = docid.text
@@ -77,7 +80,8 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
                         source = self.SOURCE_DEFAULTS[source]
                     else:
                         source = Source.NYT
-                    text = doc.text.split('\n\n\n')[1].strip()
+                    #text = doc.text.split('\n\n\n')[1].strip()
+                    text = soup.find('text')
                     headline = doc.headline
                     if headline:
                         headline = headline.text.strip()
