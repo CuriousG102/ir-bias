@@ -20,6 +20,7 @@ class Source(Enum):
     FW_STAR_TELEGRAM = (['TE', 'TEX'], 'Fort Worth Star-Telegram')
     HARTC = ([], 'Hartford Courant')
     HRST = (['HNS'], 'Hearst Newspapers') # no unique tag
+    IND = ([], 'Independent')
     INTL_HERALD_TRIB = ([], 'International Herald Tribune')
     KAN_CITY_STAR = (['KAN'], 'Kansas City Star')
     LA_DAILY = (['LADN'], 'Los Angeles Daily News')

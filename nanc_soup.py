@@ -16,6 +16,7 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
         'B': Source.BOST,
         'BO': Source.BOST,
         'BOS': Source.BOST,
+        'CLINIC': Source.NYT,
         'COX': Source.COX,
         'COLUMN': Source.COX,
         'EC': Source.ECO,
@@ -23,22 +24,20 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
         'ECONOMI': Source.ECO,
         'ECONOMIST': Source.ECO,
         'HNS': Source.HRST,
+        'INDEPENDENT': Source.IND,
         'KAN': Source.KAN_CITY_STAR,
         'LADN': Source.LA_DAILY,
         'LAT': Source.LAT,
         'NYT': Source.NYT,
         'REUFF': Source.REUTE,
         'REUTE': Source.REUTE,
+        'SF': Source.SF_CHRON,
         'SFCHRON': Source.SF_CHRON,
         'SPI': Source.SEATTLE_POST_INTEL,
         'TE': Source.FW_STAR_TELEGRAM,
         'TEX': Source.FW_STAR_TELEGRAM,
         'WP': Source.WAPO,
-        'WSJ': Source.WSJ,
-        '1': None,
-        'PA': None,
-        'TESTER': None,
-        'NAT': None
+        'WSJ': Source.WSJ
     }
 
     ENCODING = 'ISO-8859-1'
@@ -62,26 +61,38 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
         i = 0
         for doc in tree.find_all('doc'):
             try:
-                soup = BeautifulSoup(str(doc))
-                #print(str(soup))
-                #print(soup.find('text'))
                 docid = doc.docid
                 if docid:
                     docid = docid.text
                 docSource = doc.source
                 if docSource:
                     docSource = docSource.text
+                prdsrvid = doc.prdsrvid
+                if prdsrvid:
+                    prdsrvid = prdsrvid.text
                 if docid is not None and 'nyt' in docid.lower():
                     date = datetime.datetime.strptime(re.findall(r'\d+', docid)[0], '%y%m%d')
                     preamble = doc.preamble
                     if preamble is not None:
                         preamble = preamble.text
                         source = preamble.split('\n')[1].split('-')[-1].split(' ')[0]
-                        source = self.SOURCE_DEFAULTS[source]
+                        if source in self.SOURCE_DEFAULTS:
+                            source = self.SOURCE_DEFAULTS[source]
+                        else:
+                            if 'Los Angeles Daily News' in preamble:
+                                source = Source.LA_DAILY
+                            elif 'N.Y. Times' in preamble:
+                                source = Source.NYT
+                            elif 'Cox News' in preamble:
+                                source = Source.COX
+                            elif 'ECONOMIST' or 'Economist' in preamble:
+                                source = Source.ECO
+                            elif 'Cecilia' in preamble:
+                                source = None
+                            else:
+                                source = None
                     else:
                         source = Source.NYT
-                    #text = doc.text.split('\n\n\n')[1].strip()
-                    text = soup.find('text')
                     headline = doc.headline
                     if headline:
                         headline = headline.text.strip()
@@ -90,6 +101,7 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
                     copyright = doc.cpyright
                     source = Source.LATW
                     if copyright is not None:
+                        copyright = copyright.text
                         if 'Newsday' in copyright:
                             source = Source.NEWSDAY
                         elif 'Courant' in copyright:
@@ -100,9 +112,8 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
                            source = Source.LAT
                         elif 'Post' in copyright:
                            source = Source.WAPO
-                    text = ('\n\n\n').join(doc.text.split('\n\n\n')[2:-1]).strip()
-                    text = re.sub('&UR; (Begin optional trim)', '', text)
-                    text = re.sub('&UR; (End optional trim)', '', text)
+                        else:
+                            source = None
                     headline = doc.headline
                     if headline:
                         headline = (' ').join(doc.headline.text.strip().split(' ')[1:-2])
@@ -124,22 +135,25 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
                                 pass
                     else:
                         date = None
-                    text = doc.text.split('\n\n\n')[1].strip()
                     headline = doc.headline
                     if headline:
                         headline = headline.text.strip()
-                elif docSource is not None and 'WJ' in docSource:
+                elif (docSource is not None and 'WJ' in docSource) or (prdsrvid is not None and 'WJ' in prdsrvid or 'WA' in prdsrvid):
                     source = Source.WSJ
-                    date = doc.dspdate.text.strip()[2:]
-                    date = datetime.datetime.strptime(date, '%y%m%d')
-                    text = ('\n\n').join(doc.text.split('\n\n')[1:-1]).strip()
+                    date = doc.dspdate
+                    if not date:
+                        date = doc.msgdate
+                    if date:
+                        date = date.text.strip()[2:]
+                        date = datetime.datetime.strptime(date, '%y%m%d')
+                    else:
+                        date = None
                     headline = doc.headline
                     if headline:
                         headline = headline.text.strip()
                 else:
                     date = None
                     source = None
-                    doc = doc.text
                     headline = doc.headline
                     if headline:
                         headline = headline.text.strip()
@@ -147,6 +161,9 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
                 if dateline:
                     dateline = dateline.text
                 other = None
+                text = doc.find('text')
+                if text:
+                    text = text.text.strip()
                 yield Article(headline, date, text, source, other, dateline)
             except Exception:
                 raise Exception('Failed on: ' + str(tree.find_all('doc')[i]))
