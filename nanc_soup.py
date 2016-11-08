@@ -57,114 +57,123 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
         except Exception:
             raise Exception('Failed on: ' + path)
 
+    def parse_latwp(self, doc):
+        TEXT_AND_SOURCE = [('Newsday', Source.NEWSDAY),
+                           ('Courant', Source.HARTC),
+                           ('Sun', Source.BSUN),
+                           ('Times', Source.LAT),
+                           ('Post', Source.WAPO),]
+        doc = doc.docid
+
+        headline = (' ').join(doc.headline.text.strip().split(' ')[1:-2]) if headline.text else None
+        dateline = doc.dateline.text if doc.dateline else None
+        date = datetime.datetime.strptime(re.findall(r'\d+', docid)[0], '%y%m%d')
+        source = Source.LATW
+        text = doc.find('text').text.strip() if doc.find('text') else None
+        copyright = doc.cpyright
+        other = None
+        
+        for text, src in TEXT_AND_SOURCE:
+            if text.lower() in preamble.lower():
+                source = src
+
+        return Article(headline, date, text, source, other, dateline)
+    
+    def parse_nyt(self, doc):
+        TEXT_AND_SOURCE = [('Los Angeles Daily News', Source.LA_DAILY), 
+                           ('N.Y. Times', Source.NYT),
+                           ('Cox News', Source.COX),
+                           ('Economist', Source.ECO),]
+        docid = doc.docid
+
+        headline = doc.headline.text.strip() if doc.headline else None
+        dateline = doc.dateline.text if doc.dateline else None
+        date = datetime.datetime.strptime(re.findall(r'\d+', docid)[0], '%y%m%d')
+        text = doc.find('text').text.strip() if doc.find('text') else None
+        source = Source.NYT
+        other = None
+
+        preamble = doc.preamble.text if doc.preamble else None
+        if preamble:
+            source = preamble.split('\n')[1].split('-')[-1].split(' ')[0]
+            if source in self.SOURCE_DEFAULTS:
+                source = self.SOURCE_DEFAULTS[source]
+            else:
+                for text, src in TEXT_AND_SOURCE:
+                    if text.lower() in preamble.lower():
+                        source = src
+
+        return Article(headline, date, text, source, other, dateline)
+
+    def parse_reu(self, doc):
+        docid = doc.docid
+
+        headline = doc.headline.text.strip() if doc.headline else None
+        dateline = doc.dateline.text if doc.dateline else None
+        source = Source.REUTE
+        date = None
+        text = doc.find('text').text.strip() if doc.find('text') else Nonei
+        other = None
+
+        header = doc.header.text.strip() if doc.header else None
+        if header:
+            try:
+                date = re.findall(r'\d+', docid)[0][:2] + '-' + re.split(r' ', header)[1]
+                date = re.sub('-', '', date)
+                date = datetime.datetime.strptime(date, '%y%m%d')
+            except Exception:
+                try:
+                    date = re.findall(r'\d+', docid)[0][:2] + doc.keyword.strip()
+                    date = datetime.datetime.strptime(date, '%y%m%d')
+                except:
+                    date = None
+                    pass
+                
+        return Article(headline, date, text, source, other, dateline)
+
+    def parse_wj(self, tree):
+        headline = doc.headline.text.strip() if doc.headline else None
+        dateline = doc.dateline.text if doc.dateline else None
+        source = Source.WSJ
+        date = doc.dspdate
+        text = doc.find('text').text.strip() if doc.find('text') else None
+        other = None
+
+        if not date:
+            date = doc.msgdate
+        
+        if date:
+            date = date.text.strip()[2:]
+            date = datetime.datetime.strptime(date, '%y%m%d')
+        else:
+            date = None
+
+        return Article(headline, date, text, source, other, dateline)
+
     def parse_tree_to_articles(self, tree):
         i = 0
         for doc in tree.find_all('doc'):
             try:
-                docid = doc.docid
-                if docid:
-                    docid = docid.text
-                docSource = doc.source
-                if docSource:
-                    docSource = docSource.text
-                prdsrvid = doc.prdsrvid
-                if prdsrvid:
-                    prdsrvid = prdsrvid.text
-                if docid is not None and 'nyt' in docid.lower():
-                    date = datetime.datetime.strptime(re.findall(r'\d+', docid)[0], '%y%m%d')
-                    preamble = doc.preamble
-                    if preamble is not None:
-                        preamble = preamble.text
-                        source = preamble.split('\n')[1].split('-')[-1].split(' ')[0]
-                        if source in self.SOURCE_DEFAULTS:
-                            source = self.SOURCE_DEFAULTS[source]
-                        else:
-                            if 'Los Angeles Daily News' in preamble:
-                                source = Source.LA_DAILY
-                            elif 'N.Y. Times' in preamble:
-                                source = Source.NYT
-                            elif 'Cox News' in preamble:
-                                source = Source.COX
-                            elif 'ECONOMIST' or 'Economist' in preamble:
-                                source = Source.ECO
-                            elif 'Cecilia' in preamble:
-                                source = None
-                            else:
-                                source = None
-                    else:
-                        source = Source.NYT
-                    headline = doc.headline
-                    if headline:
-                        headline = headline.text.strip()
-                elif docid is not None and 'latwp' in docid.lower():
-                    date = datetime.datetime.strptime(re.findall(r'\d+', docid)[0], '%y%m%d')
-                    copyright = doc.cpyright
-                    source = Source.LATW
-                    if copyright is not None:
-                        copyright = copyright.text
-                        if 'Newsday' in copyright:
-                            source = Source.NEWSDAY
-                        elif 'Courant' in copyright:
-                            source = Source.HARTC
-                        elif 'Sun' in copyright:
-                            source = Source.BSUN
-                        elif 'Times' in copyright:
-                           source = Source.LAT
-                        elif 'Post' in copyright:
-                           source = Source.WAPO
-                        else:
-                            source = None
-                    headline = doc.headline
-                    if headline:
-                        headline = (' ').join(doc.headline.text.strip().split(' ')[1:-2])
-                elif docid is not None and 'reu' in docid.lower():
-                    source = Source.REUTE
-                    header = doc.header
-                    if header is not None:
-                        header = header.text.strip()
-                        try:
-                            date = re.findall(r'\d+', docid)[0][:2] + '-' + re.split(r' ', header)[1]
-                            date = re.sub('-', '', date)
-                            date = datetime.datetime.strptime(date, '%y%m%d')
-                        except Exception:
-                            try:
-                                date = re.findall(r'\d+', docid)[0][:2] + doc.keyword.strip()
-                                date = datetime.datetime.strptime(date, '%y%m%d')
-                            except:
-                                date = None
-                                pass
-                    else:
-                        date = None
-                    headline = doc.headline
-                    if headline:
-                        headline = headline.text.strip()
-                elif (docSource is not None and 'WJ' in docSource) or (prdsrvid is not None and 'WJ' in prdsrvid or 'WA' in prdsrvid):
-                    source = Source.WSJ
-                    date = doc.dspdate
-                    if not date:
-                        date = doc.msgdate
-                    if date:
-                        date = date.text.strip()[2:]
-                        date = datetime.datetime.strptime(date, '%y%m%d')
-                    else:
-                        date = None
-                    headline = doc.headline
-                    if headline:
-                        headline = headline.text.strip()
+                docid = doc.docid.text if doc.docid else None
+                docsource = doc.source.text if doc.source else None
+                prdsrvid = doc.prdsrvid.text if doc.prdsrvid else None
+                
+                if docid and 'nyt' in docid.lower():
+                    yield parse_nyt(doc)
+                elif docid and 'latwp' in docid.lower():
+                    yield parse_latwp(doc)            
+                elif docid and 'reu' in docid.lower():
+                    yield parse_reu(doc) 
+                elif (docsource  and 'WJ' in docsource) or (prdsrvid and 'WJ' in prdsrvid or 'WA' in prdsrvid):
+                    yield parse_wj(doc) 
                 else:
                     date = None
                     source = None
-                    headline = doc.headline
-                    if headline:
-                        headline = headline.text.strip()
-                dateline = doc.dateline
-                if dateline:
-                    dateline = dateline.text
-                other = None
-                text = doc.find('text')
-                if text:
-                    text = text.text.strip()
-                yield Article(headline, date, text, source, other, dateline)
+                    headline = doc.headline.text.strip() if doc.headline else None
+                    dateline = doc.dateline.text if doc.dateline else None
+                    other = None
+                    text = doc.find('text').text.strip() if doc.find('text') else None
+                    yield Article(headline, date, text, source, other, dateline)
             except Exception:
                 raise Exception('Failed on: ' + str(tree.find_all('doc')[i]))
             finally:
