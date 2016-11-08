@@ -104,9 +104,9 @@ class DataManager:
                 if article.source in source_file_map:
                     source_file = source_file_map[article.source]
                 else:
-                    file_path = self.get_text_file_path(source)
+                    file_path = self.get_text_file_path(article.source)
                     source_file = open(file_path, 'w')
-                    soruce_file_map[article.source] = source_file
+                    source_file_map[article.source] = source_file
                 text = article.text
                 if article.headline:
                     text = ' '.join([article.headline, text])
