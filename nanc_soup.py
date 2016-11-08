@@ -63,19 +63,20 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
                            ('Sun', Source.BSUN),
                            ('Times', Source.LAT),
                            ('Post', Source.WAPO),]
-        doc = doc.docid
+        docid = doc.docid.text
 
-        headline = (' ').join(doc.headline.text.strip().split(' ')[1:-2]) if headline.text else None
+        headline = (' ').join(doc.headline.text.strip().split(' ')[1:-2]) if doc.headline else None
         dateline = doc.dateline.text if doc.dateline else None
         date = datetime.datetime.strptime(re.findall(r'\d+', docid)[0], '%y%m%d')
         source = Source.LATW
         text = doc.find('text').text.strip() if doc.find('text') else None
-        copyright = doc.cpyright
         other = None
-        
-        for text, src in TEXT_AND_SOURCE:
-            if text.lower() in preamble.lower():
-                source = src
+ 
+        copyright = doc.cpyright.text if doc.cpyright else None
+        if copyright:
+            for txt, src in TEXT_AND_SOURCE:
+                if txt.lower() in copyright.lower():
+                    source = src
 
         return Article(headline, date, text, source, other, dateline)
     
@@ -84,7 +85,7 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
                            ('N.Y. Times', Source.NYT),
                            ('Cox News', Source.COX),
                            ('Economist', Source.ECO),]
-        docid = doc.docid
+        docid = doc.docid.text
 
         headline = doc.headline.text.strip() if doc.headline else None
         dateline = doc.dateline.text if doc.dateline else None
@@ -99,8 +100,8 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
             if source in self.SOURCE_DEFAULTS:
                 source = self.SOURCE_DEFAULTS[source]
             else:
-                for text, src in TEXT_AND_SOURCE:
-                    if text.lower() in preamble.lower():
+                for txt, src in TEXT_AND_SOURCE:
+                    if txt.lower() in preamble.lower():
                         source = src
 
         return Article(headline, date, text, source, other, dateline)
@@ -131,8 +132,8 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
                 
         return Article(headline, date, text, source, other, dateline)
 
-    def parse_wj(self, tree):
-        headline = doc.headline.text.strip() if doc.headline else None
+    def parse_wj(self, doc):
+        headline = doc.hl.text.strip() if doc.hl else None
         dateline = doc.dateline.text if doc.dateline else None
         source = Source.WSJ
         date = doc.dspdate
@@ -159,13 +160,13 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
                 prdsrvid = doc.prdsrvid.text if doc.prdsrvid else None
                 
                 if docid and 'nyt' in docid.lower():
-                    yield parse_nyt(doc)
+                    yield self.parse_nyt(doc)
                 elif docid and 'latwp' in docid.lower():
-                    yield parse_latwp(doc)            
+                    yield self.parse_latwp(doc)            
                 elif docid and 'reu' in docid.lower():
-                    yield parse_reu(doc) 
+                    yield self.parse_reu(doc) 
                 elif (docsource  and 'WJ' in docsource) or (prdsrvid and 'WJ' in prdsrvid or 'WA' in prdsrvid):
-                    yield parse_wj(doc) 
+                    yield self.parse_wj(doc) 
                 else:
                     date = None
                     source = None

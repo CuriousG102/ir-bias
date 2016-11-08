@@ -12,6 +12,6 @@ def test_extractors(*extractors_and_paths):
         print('CONGRATULATIONS! IT WORKS')
 
 if __name__ == '__main__':
-    #test_extractors((AquaintDatasetExtractor,'/home/paper/aquaint_real'))
+    #test_extractors((AquaintDatasetExtractor,'/home/paper/aquaint_real/'))
     #test_extractors((GigawordDatasetExtractor,'/newsdata/gigaword/'))
-    test_extractors((NANCDatasetExtractor,'/newsdata/nanc/LDC2008T15__North_American_News_Text_Complete_NTC'))
+    test_extractors((NANCDatasetExtractor,'/newsdata/nanc/LDC2008T15__North_American_News_Text_Complete_NTC/'))
