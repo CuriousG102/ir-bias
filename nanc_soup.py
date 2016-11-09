@@ -96,14 +96,14 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
 
         preamble = doc.preamble.text if doc.preamble else None
         if preamble:
-            source = preamble.split('\n')[1].split('-')[-1].split(' ')[0]
-            if source in self.SOURCE_DEFAULTS:
-                source = self.SOURCE_DEFAULTS[source]
+            src = preamble.split('\n')[1].split('-')[-1].split(' ')[0]
+            if src in self.SOURCE_DEFAULTS:
+                source = self.SOURCE_DEFAULTS[src]
             else:
                 for txt, src in TEXT_AND_SOURCE:
                     if txt.lower() in preamble.lower():
                         source = src
-
+        
         return Article(headline, date, text, source, other, dateline)
 
     def parse_reu(self, doc):
