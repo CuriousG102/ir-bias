@@ -107,7 +107,7 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
         return Article(headline, date, text, source, other, dateline)
 
     def parse_reu(self, doc):
-        docid = doc.docid
+        docid = doc.docid.text
 
         headline = doc.headline.text.strip() if doc.headline else None
         dateline = doc.dateline.text if doc.dateline else None
@@ -124,12 +124,16 @@ class NANCDatasetExtractor(AbstractDatasetExtractor):
                 date = datetime.datetime.strptime(date, '%y%m%d')
             except Exception:
                 try:
-                    date = re.findall(r'\d+', docid)[0][:2] + doc.keyword.strip()
+                    date = docid.split('.')[0][-6:]
                     date = datetime.datetime.strptime(date, '%y%m%d')
                 except:
-                    date = None
-                    pass
-                
+                    try:
+                        date = re.findall(r'\d+', docid)[0][:2] + doc.keyword.strip()
+                        date = datetime.datetime.strptime(date, '%y%m%d')
+                    except:
+                        date = None
+                        pass
+
         return Article(headline, date, text, source, other, dateline)
 
     def parse_wj(self, doc):

@@ -6,6 +6,7 @@ import gensim
 
 from aquaint import AquaintDatasetExtractor
 from gigaword import GigawordDatasetExtractor
+from settings import settings
 from something import BigIterable
 from sources import Source
 
@@ -60,7 +61,10 @@ class DataManager:
         assert(tot_accur['section'] == 'total')
         correct = len(tot_accur['correct'])
         incorrect = len(tot_accur['incorrect'])
-        accur_percentage = correct / (correct + incorrect)
+        if correct + incorrect == 0:
+            accur_percentage = 0
+        else:
+            accur_percentage = correct / (correct + incorrect)
         return accur, accur_percentage
 
     def get_available_source(self, path):
@@ -98,9 +102,16 @@ class DataManager:
         Returns set of sources extracted
         '''
         all_articles = BigIterable(*extractors)
+        NO_SOURCE_REPORT_RATE = NO_TEXT_REPORT_RATE = 5000
+        num_no_text = 0
         source_file_map = dict()
         try:
             for article in all_articles:
+                if not article.text:
+                    num_no_text += 1
+                    if num_no_text % NO_TEXT_REPORT_RATE == 0:
+                        print('%i textless articles thrown out' % num_no_text)
+                    continue
                 if article.source in source_file_map:
                     source_file = source_file_map[article.source]
                 else:
@@ -122,6 +133,8 @@ class DataManager:
         for f in source_file_map.values():
             f.close()
 
+        if num_no_text:
+            print('%i textless articles were thrown out' % num_no_text)
         return source_file_map.keys()
 
     def generate_model_files(self, sources, gensim_args=None):

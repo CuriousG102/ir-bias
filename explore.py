@@ -1,6 +1,7 @@
 import itertools
 
 from settings import settings
+from sources import Source
 from model_data import DataManager
 
 def judge_model_quality(model):
@@ -12,10 +13,13 @@ def judge_model_quality(model):
     assert(tot_accur['section'] == 'total')
     correct = len(tot_accur['correct'])
     incorrect = len(tot_accur['incorrect'])
-    accur_percentage = correct / (correct + incorrect)
+    if correct + incorrect == 0:
+        accur_percentage = 0
+    else:
+        accur_percentage = correct / (correct + incorrect)
     return accur, accur_percentage
 
-def search_hyper_parameters(gensim_args):
+def search_hyper_parameters(gensim_args, skip_sources=None):
     '''
     Searches the hyperparameter space for each available source.
     Pass in a dict with an iterable for each kwarg you want to search
@@ -25,9 +29,8 @@ def search_hyper_parameters(gensim_args):
     rating as judged by the method in judge_model_quality
     '''
     gensim_args = {k: list(v) for k, v in gensim_args.items()}
-    data_manager = DataManager(settings['temp_path'],
+    data_manager = DataManager(settings['local_temp_path'],
                                settings['experiment_save_path'])
-    data_manager.clear_model_files()
     best_parameters = dict()
 
     possible_options = []
@@ -41,6 +44,10 @@ def search_hyper_parameters(gensim_args):
     print('Number option combinations: %i' % num_combos)
 
     for source in data_manager.get_available_source_texts():
+        if skip_sources and source in skip_sources:
+            print('Skipping: %s' % source)
+            continue
+        data_manager.clear_model_for_source(source)
         print('Searching Hyperparameter Space: %s' % source) 
         best_accuracy = -1
 
@@ -62,9 +69,37 @@ def search_hyper_parameters(gensim_args):
 
 if __name__ == '__main__':
     search_hyper_parameters({
-        'size': [100, 200, 300],
+        'size': [300],
         'window': [3, 5, 7],
         'sample': [1e-3, 1e-5],
         'hs': [0, 1],
-    }) 
+    },
+    skip_sources=set([
+        Source.ARZ_REPUB,
+        Source.APW,
+        Source.HRST,
+        Source.BLMBRG,
+        Source.WSJ,
+        Source.COX,
+        Source.LATW,
+        Source.XIN,
+        Source.WAPO,
+		Source.ATL_CONST,
+		Source.LBPT,
+		Source.BSUN,
+		Source.AFP,
+		Source.CNA,
+		Source.BOST,
+		Source.NYT,
+		Source.HARTC,
+		Source.AZG,
+		Source.SEATTLE_POST_INTEL,
+		Source.LA_DAILY,
+		Source.SF_CHRON,
+		Source.NEWSDAY,
+		Source.ECO,
+		Source.SLATE,
+		Source.LAT,
+		Source.IND,
+    ]))
 

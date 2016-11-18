@@ -8,6 +8,7 @@ class BigIterable:
     
     def __iter__(self):
         source_dates = dict()
+        num_not_enough_info = 0
         num_unique_articles = 0
         num_dups = 0
         for iterable in self.iterables:
@@ -25,6 +26,11 @@ class BigIterable:
                         specific_source_dates[article.source].add(article.pub_date)
                     else:
                         specific_source_dates[article.source] = set([article.pub_date])
+                else:
+                    num_not_enough_info += 1
+                    if num_not_enough_info % 10000 == 0:
+                        print('Threw out article %i')
+                    continue
 
                 num_unique_articles += 1
                 if num_unique_articles % 10000 == 0:
@@ -40,6 +46,8 @@ class BigIterable:
             print('done with one of the iterables')
 
         print('Processed %i articles, %i duplicates' % (num_unique_articles, num_dups))
+        if num_not_enough_info:
+            print('WARNING: Threw out %i articles due to lack of source and/or date' % num_not_enough_info)
 
 if __name__ == '__main__':
     big_iter = BigIterable(
