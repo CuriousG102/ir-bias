@@ -3,6 +3,7 @@ import os
 import re
 
 import gensim
+import pickle
 
 from aquaint import AquaintDatasetExtractor
 from gigaword import GigawordDatasetExtractor
@@ -66,6 +67,31 @@ class DataManager:
         else:
             accur_percentage = correct / (correct + incorrect)
         return accur, accur_percentage
+
+    def save_models_accuracy(self):
+        '''
+        Saves a dict that gives information about each models' accuracy:
+        the key is the source, the value consists of a tuple
+        made up of 1) the dict of accuracy results and 2) the total accuracy
+        The save file path and file name is hard-coded in the settings folder	
+        '''	
+        source_acc = {}
+        for source in self.get_available_source_models():
+            print('Judging accuracy for %s' % source)
+            #model = self.get_model_for_source(source)
+            accur_dict, accur_percentage = self.get_source_model_accuracy(source)
+            source_acc[source] = [accur_dict, accur_percentage]
+        with open(settings['accuracy_path'], 'wb') as f:
+            pickle.dump(source_acc, f)
+
+    def load_models_accuracy(self):
+        '''
+        Loads a dict that gives information about each models' accuracy:
+        the key is the source, and the value consists of a tuple made up of
+        1) the dict of the accuracy results and 2) the total accuracy 
+        '''
+        with open(settings['accuracy_path'], 'rb') as f:
+            return pickle.load(f)
 
     def get_available_source(self, path):
         name_source_mapping = {}

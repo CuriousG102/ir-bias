@@ -8,13 +8,13 @@ import numpy as np
 from sklearn import svm, model_selection
 from sklearn.decomposition import PCA
 
-from explore import judge_model_quality
 from model_data import DataManager
 from settings import settings
 
 class BiasFinder:
     '''
     Probably not thread safe
+    Revision of bias_explorer that no longer uses SVM to obtain list of gender neutral words
     '''
     def __init__(self, train_cutoff=50000,
                  dm_temp_path=settings['temp_path'],
@@ -23,9 +23,7 @@ class BiasFinder:
                  golden_model_path=settings['golden_model_path'],
                  positive_words_path=settings['positive_words_path'],
                  word_filter=lambda w: w.isalpha() and len(w) <= 20,
-                 word_pairs_path=settings['word_pairs_path'],
-                 accuracy_path="/newsdata/models_temp_data/",
-                 models_acc_name = "models_accuracy2"):
+                 word_pairs_path=settings['word_pairs_path']):
         self.train_cutoff = train_cutoff
         self.data_manager = DataManager(dm_temp_path, dm_save_path)
         self.accuracy_cutoff = accuracy_cutoff
@@ -33,34 +31,17 @@ class BiasFinder:
         self.positive_words_path = positive_words_path
         self.word_filter = word_filter
         self.word_pairs_path = word_pairs_path
-        self.accuracy_path = accuracy_path
-        self.models_acc_name = models_acc_name
 
     def normalize(self, vector):
         return vector/np.linalg.norm(vector)
-
-    def save_model_accuracy(self):
-        source_acc = {} 
-        name = self.models_acc_name
-        for source in self.data_manager.get_available_source_models():
-            print('Judging accuracy for %s' % source)
-            model = self.data_manager.get_model_for_source(source)
-            accur_dict, accur_percentage = judge_model_quality(model)
-            source_acc[source] = accur_dict, accur_percentage
-        with open(self.accuracy_path + name + '.pkl', 'wb') as f:
-            pickle.dump(source_acc, f)
-        
-    def load_model_accuracy(self):
-        with open(self.accuracy_path + self.models_acc_name + '.pkl', 'rb') as f:
-            return pickle.load(f)
-        
+ 
     @lru_cache()
     def get_eligible_sources(self):
         sources = []
-        source_acc = self.load_model_accuracy()
+        source_acc = self.data_manager.load_models_accuracy()
         for source in source_acc:
             accur_dict, accur_percentage = source_acc[source]
-            print('Accuracy: %f' % accur_percentage)
+            #print('Accuracy: %f %s' % (accur_percentage, source))
             if accur_percentage >= self.accuracy_cutoff:
                 sources.append(source)
         return sources
@@ -81,14 +62,14 @@ class BiasFinder:
 
     @lru_cache()
     def top_words_by_source(self, source, use_train_cutoff):
-        print('Getting top words for %s' % source)
+        #print('Getting top words for %s' % source)
         source_model = self.data_manager.get_model_for_source(source)
         return self.top_words_by_count(source_model,
                                        use_train_cutoff=use_train_cutoff)
 
     @lru_cache()
     def top_words_golden(self, use_train_cutoff):
-        print('Getting top words for Golden')
+        #print('Getting top words for Golden')
         golden_model = Word2Vec.load_word2vec_format(self.golden_model_path,
                                                      binary=True)
         top_words = self.top_words_by_count(golden_model, 
@@ -115,12 +96,25 @@ class BiasFinder:
 
     @lru_cache()
     def get_common_neutral_words(self):
-        #top_golden_words = self.top_words_golden(True)
-        #neutral_words = top_golden_words - set(self.get_common_positive_words())
+        '''
+        currently, you need to either comment out the Google News or Crawford 
+        code snippet so that only one set of neutral words is used for the 
+        direct bias formula
+        '''
+
+
+        '''retrieves neutral words from Google News
+        top_golden_words = self.top_words_golden(True)
+        neutral_words = top_golden_words - set(self.get_common_positive_words())
+        '''
+
+        '''retrieves neutral words from Crawford'''
         with open('/newsdata/crawford_gend_neutral.csv') as f:
             neutral_words = [row[0].strip() for row in csv.reader(f)]
         neutral_words = set(neutral_words)
-
+     
+       
+        '''only keeps words that are present across all sources'''
         for source in self.get_eligible_sources():
             neutral_words &= set(self.top_words_by_source(source, False))
 
@@ -154,6 +148,7 @@ class BiasFinder:
             tot_direct_bias += abs(np.dot(pc, word_embedding)) ** c
         
         tot_direct_bias /= len(neutral_words)
+        print(source)
         print(tot_direct_bias)
         return tot_direct_bias
 
