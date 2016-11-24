@@ -120,7 +120,7 @@ class BiasFinder:
 
         return neutral_words
 
-    def get_source_bias_measurement(self, source, c=1.0):
+    def get_principal_components(self, source):
         w2v_model = self.data_manager.get_model_for_source(source)
         with open(self.word_pairs_path) as f:
             pair_words = []
@@ -130,13 +130,18 @@ class BiasFinder:
 
         embed_diffs = [] 
         for she_word, he_word in pair_words:
-            she_embed = self.normalize(w2v_model[she_word])
-            he_embed = self.normalize(w2v_model[he_word])
+            she_embed = w2v_model[she_word]
+            he_embed = w2v_model[he_word]
             embed_diff = she_embed - he_embed
-            embed_diffs.append(embed_diff)
+            embed_diffs.append(self.normalize(embed_diff))
         pca = PCA(n_components=len(embed_diffs))
         pca.fit(embed_diffs)
         # pc is g in the paper
+        return pca 
+
+    def get_source_bias_measurement(self, source, c=1.0):
+        w2v_model = self.data_manager.get_model_for_source(source)
+        pca = self.get_principal_components(source)
         pc = self.normalize(pca.components_[0])
         # neutral words is N in the paper
         neutral_words = (list(self.get_common_neutral_words()))
@@ -151,4 +156,5 @@ class BiasFinder:
         print(source)
         print(tot_direct_bias)
         return tot_direct_bias
+
 
