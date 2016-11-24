@@ -130,8 +130,8 @@ class BiasFinder:
 
         embed_diffs = [] 
         for she_word, he_word in pair_words:
-            she_embed = w2v_model[she_word]
-            he_embed = w2v_model[he_word]
+            she_embed = self.normalize(w2v_model[she_word])
+            he_embed = self.normalize(w2v_model[he_word])
             embed_diff = she_embed - he_embed
             embed_diffs.append(self.normalize(embed_diff))
         pca = PCA(n_components=len(embed_diffs))
