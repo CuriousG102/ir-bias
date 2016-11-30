@@ -23,7 +23,8 @@ class BiasFinder:
                  golden_model_path=settings['golden_model_path'],
                  positive_words_path=settings['positive_words_path'],
                  word_filter=lambda w: w.isalpha() and len(w) <= 20,
-                 word_pairs_path=settings['word_pairs_path']):
+                 word_pairs_path=settings['word_pairs_path'],
+                 neutral_words_path=settings['gender_neutral_path']):
         self.train_cutoff = train_cutoff
         self.data_manager = DataManager(dm_temp_path, dm_save_path)
         self.accuracy_cutoff = accuracy_cutoff
@@ -31,6 +32,7 @@ class BiasFinder:
         self.positive_words_path = positive_words_path
         self.word_filter = word_filter
         self.word_pairs_path = word_pairs_path
+        self.neutral_words_path = neutral_words_path
 
     def normalize(self, vector):
         return vector/np.linalg.norm(vector)
@@ -96,20 +98,13 @@ class BiasFinder:
 
     @lru_cache()
     def get_common_neutral_words(self):
-        '''
-        currently, you need to either comment out the Google News or Crawford 
-        code snippet so that only one set of neutral words is used for the 
-        direct bias formula
-        '''
-
-
         '''retrieves neutral words from Google News
         top_golden_words = self.top_words_golden(True)
         neutral_words = top_golden_words - set(self.get_common_positive_words())
         '''
 
-        '''retrieves neutral words from Crawford'''
-        with open('/newsdata/crawford_gend_neutral.csv') as f:
+        '''retrieves neutral words from specified neutral words path'''
+        with open(self.neutral_words_path) as f:
             neutral_words = [row[0].strip() for row in csv.reader(f)]
         neutral_words = set(neutral_words)
      
