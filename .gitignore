@@ -5,4 +5,5 @@ venv
 models
 experiment_models
 extracted_text
+.ipynb_checkpoints
 

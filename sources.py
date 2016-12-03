@@ -46,3 +46,7 @@ class Source(Enum):
     
     def __str__(self):
         return self.source_name + ': '.join(self.datelines)
+    
+    def __lt__(self, other):
+        return self.name < other.name 
+
