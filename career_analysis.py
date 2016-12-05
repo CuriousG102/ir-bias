@@ -181,7 +181,7 @@ class BiasFinder:
         with open(self.word_pairs_path) as f:
             pair_words = []
 #            print(list(csv.reader(f)))
-            for she_word, he_word in list(csv.reader(f)):
+            for she_word, he_word in csv.reader(f):
                 if she_word in w2v_model and he_word in w2v_model:
                     if she_word in top_words and he_word in top_words:
                         pair_words.append((she_word, he_word))
