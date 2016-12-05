@@ -209,10 +209,10 @@ class BiasFinder:
             mean_cos_A = np.mean(cos_A)
             mean_cos_B = np.mean(cos_B)
             
-            cos_total = mean_cos_A + mean_cos_B
+            cos_total = cos_A + cos_B
             sd = np.std(cos_total)
 
-            results[w] = (triple[2], (mean_cos_A - mean_cos_B) // sd)
+            results[w] = (triple[2], (mean_cos_A - mean_cos_B) / sd)
             print(w, results[w])
 
         return results
