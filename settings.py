@@ -12,7 +12,8 @@ settings = {
     'save_path': '/home/paper2/ir-bias/models',
     'questions_path': '/home/paper3/ir-bias/questions-words.txt',
     'accuracy_path': '/newsdata/models_temp_data/models_accuracy.pkl',
-    'neutral_words_path': '/newsdata/crawford_gend_neutral.csv'
+    'neutral_words_path': '/newsdata/crawford_gend_neutral.csv',
+    'career_data_path': '/home/paper3/ir-bias/career_data.tsv'
 }
 
 for k in settings:
