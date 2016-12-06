@@ -168,31 +168,31 @@ class BiasFinder:
         print(tot_direct_bias)
         return tot_direct_bias
 
-    def calculate_wefat(self):
-        print('calculating wefat')
+    def calculate_wefat(self, source=None):
+        if not source:
+            # print('golden model')
+            w2v_model = Word2Vec.load_word2vec_format(self.golden_model_path,
+                                                      binary=True)
 
-        w2v_model = Word2Vec.load_word2vec_format(self.golden_model_path,
-                                                binary=True)
+        # print(source)
+        w2v_model = self.data_manager.get_model_for_source(source)
         top_words = self.top_words_by_count(w2v_model, 
                                             use_train_cutoff=True)
-
-#        print(top_words)
-
+        
         with open(self.word_pairs_path) as f:
             pair_words = []
-#            print(list(csv.reader(f)))
             for she_word, he_word in csv.reader(f):
                 if she_word in w2v_model and he_word in w2v_model:
                     if she_word in top_words and he_word in top_words:
                         pair_words.append((she_word, he_word))
-        print(pair_words)
+        # print(pair_words)
 
         with open(self.career_data_path) as f:
             career_data = []
             for title, abbrev, percentage in csv.reader(f, delimiter="\t"):
                 if abbrev in w2v_model and top_words:
-                    career_data.append((title, abbrev, percentage))
-        print(career_data)
+                    career_data.append((title, abbrev, float(percentage)))
+        # print(career_data)
 
         results = {}
         for triple in career_data:
@@ -213,6 +213,6 @@ class BiasFinder:
             sd = np.std(cos_total)
 
             results[w] = (triple[2], (mean_cos_A - mean_cos_B) / sd)
-            print(w, results[w])
+            # print(w, results[w])
 
         return results
