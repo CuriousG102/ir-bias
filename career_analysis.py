@@ -173,9 +173,10 @@ class BiasFinder:
             # print('golden model')
             w2v_model = Word2Vec.load_word2vec_format(self.golden_model_path,
                                                       binary=True)
-
-        # print(source)
-        w2v_model = self.data_manager.get_model_for_source(source)
+        else:
+            # print(source)
+            w2v_model = self.data_manager.get_model_for_source(source)
+        
         top_words = self.top_words_by_count(w2v_model, 
                                             use_train_cutoff=True)
         
