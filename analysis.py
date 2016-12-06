@@ -19,7 +19,8 @@ class BiasFinder:
     def __init__(self, train_cutoff=50000,
                  dm_temp_path=settings['temp_path'],
                  dm_save_path=settings['experiment_save_path'],
-                 accuracy_cutoff=.4,
+                 accuracy_cutoff=.55,
+                 career_data_path=settings['career_data_path'],
                  golden_model_path=settings['golden_model_path'],
                  positive_words_path=settings['positive_words_path'],
                  word_filter=lambda w: w.isalpha() and len(w) <= 20,
@@ -28,6 +29,7 @@ class BiasFinder:
         self.train_cutoff = train_cutoff
         self.data_manager = DataManager(dm_temp_path, dm_save_path)
         self.accuracy_cutoff = accuracy_cutoff
+        self.career_data_path = career_data_path
         self.golden_model_path = golden_model_path
         self.positive_words_path = positive_words_path
         self.word_filter = word_filter
@@ -166,4 +168,52 @@ class BiasFinder:
         print(tot_direct_bias)
         return tot_direct_bias
 
+    def calculate_wefat(self, source=None):
+        if not source:
+            # print('golden model')
+            w2v_model = Word2Vec.load_word2vec_format(self.golden_model_path,
+                                                      binary=True)
+        else:
+            # print(source)
+            w2v_model = self.data_manager.get_model_for_source(source)
+        
+        top_words = self.top_words_by_count(w2v_model, 
+                                            use_train_cutoff=True)
+        
+        with open(self.word_pairs_path) as f:
+            pair_words = []
+            for she_word, he_word in csv.reader(f):
+                if she_word in w2v_model and he_word in w2v_model:
+                    if she_word in top_words and he_word in top_words:
+                        pair_words.append((she_word, he_word))
+        # print(pair_words)
 
+        with open(self.career_data_path) as f:
+            career_data = []
+            for title, abbrev, percentage in csv.reader(f, delimiter="\t"):
+                if abbrev in w2v_model and top_words:
+                    career_data.append((title, abbrev, float(percentage)))
+        # print(career_data)
+
+        results = {}
+        for triple in career_data:
+            cos_A = []
+            cos_B = []
+
+            w = triple[1]
+            for pair in pair_words:
+                a = pair[0]
+                b = pair[1]
+                cos_A.append(w2v_model.similarity(w, a))
+                cos_B.append(w2v_model.similarity(w, b))
+
+            mean_cos_A = np.mean(cos_A)
+            mean_cos_B = np.mean(cos_B)
+            
+            cos_total = cos_A + cos_B
+            sd = np.std(cos_total)
+
+            results[w] = (triple[2], (mean_cos_A - mean_cos_B) / sd)
+            # print(w, results[w])
+
+        return results
