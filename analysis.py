@@ -191,7 +191,7 @@ class BiasFinder:
         with open(self.career_data_path) as f:
             career_data = []
             for title, abbrev, percentage in csv.reader(f, delimiter="\t"):
-                if abbrev in w2v_model and top_words:
+                if abbrev in w2v_model and abbrev in top_words:
                     career_data.append((title, abbrev, float(percentage)))
         # print(career_data)
 
